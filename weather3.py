@@ -1,5 +1,3 @@
-from crypt import methods
-from turtle import reset
 import requests
 from flask import Flask , render_template,redirect, url_for,request, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -53,6 +51,7 @@ def get_index():
 def post_index():
     new_city = request.form.get('city')
     error_msg = ''
+    _country = ''
     if new_city:
         existing_city = City.query.filter_by(name = new_city).first()
         if not existing_city:
@@ -61,16 +60,20 @@ def post_index():
                 new_city_ob = City(name = res['name'], Country = res['sys']['country'])
                 db.session.add(new_city_ob)
                 db.session.commit()
+                _country = res['sys']['country']
             else:
                 error_msg+='City Doesn\'t Exist'
         else:
             error_msg+='City Already Exists in the Database'
+    if not new_city:
+        error_msg = 'Nothing to add!'
     if error_msg:
         flash(error_msg,'Error')
     else:
-        flash(f'City {new_city} Added')
+        flash(f'City {new_city}, {_country} Added')
 
     return redirect(url_for('get_index'))
+
 
 @app.route('/delete/<name>')
 def delete_city(name):
@@ -78,11 +81,11 @@ def delete_city(name):
     db.session.delete(city)
     db.session.commit()
 
-    flash(f'Successfully deleted {city.name}!', 'sucess')
+    flash(f'Successfully deleted {city.name}, {city.Country} !', 'sucess')
     return redirect(url_for('get_index'))
 
 if __name__ == "__main__":
-	app.run(debug = True)
+	app.run(host='0.0.0.0', port='5000',debug = True)
 
 
 
